@@ -23,14 +23,15 @@ const pre=$('#pre'),pct=$('#pct');let n=0;
 const tick=()=>{n+=calm?100:3;pct.textContent=Math.min(n,100);n<100?requestAnimationFrame(tick):(pre.classList.add('done'),document.body.classList.add('ready'),$$('[data-split]').forEach(e=>e.classList.add('go')))};
 /* split headings into masked words */
 $$('[data-split]').forEach(e=>{e.setAttribute('aria-label',e.textContent);e.innerHTML=e.textContent.trim().split(/\s+/).map((w,i)=>`<span class="w" aria-hidden="true"><span style="transition-delay:${i*90}ms">${w}</span></span>`).join(' ')});
-if(pre)addEventListener('load',()=>setTimeout(tick,200));else requestAnimationFrame(()=>$$('[data-split]').forEach(e=>e.classList.add('go')));
+if(pre)addEventListener('load',()=>setTimeout(tick,200));else requestAnimationFrame(()=>{document.body.classList.add('ready');$$('[data-split]').forEach(e=>e.classList.add('go'))});
 /* menu */
 const bg=$('.burger');bg.onclick=()=>{const o=document.body.classList.toggle('menu');bg.setAttribute('aria-expanded',o)};
+addEventListener('keydown',e=>{if(e.key==='Escape'){document.body.classList.remove('menu');bg.setAttribute('aria-expanded',false)}});
 $$('.nav a').forEach(a=>a.addEventListener('click',()=>document.body.classList.remove('menu')));
 /* lerp smooth scroll (mouse wheel only; touch stays native) */
 let target=scrollY,cur=scrollY,raf=0;
 const max=()=>document.documentElement.scrollHeight-innerHeight;
-if(fine&&!calm){addEventListener('wheel',e=>{if(e.ctrlKey||document.body.classList.contains('menu'))return;e.preventDefault();target=Math.max(0,Math.min(max(),target+e.deltaY));if(!raf)raf=requestAnimationFrame(glide)},{passive:false});
+if(fine&&!calm){addEventListener('wheel',e=>{if(e.ctrlKey||document.body.classList.contains('menu'))return;e.preventDefault();target=Math.max(0,Math.min(max(),target+e.deltaY*(e.deltaMode===1?33:1)));if(!raf)raf=requestAnimationFrame(glide)},{passive:false});
  const glide=()=>{cur+=(target-cur)*.085;scrollTo(0,cur);raf=Math.abs(target-cur)>.5?requestAnimationFrame(glide):0};
  addEventListener('scroll',()=>{if(!raf){target=cur=scrollY}})}
 /* scroll-linked: progress, header, parallax, back-to-top */
@@ -50,7 +51,7 @@ $$('.creed').forEach(c=>{const q=$$('blockquote',c),d=$('.dots',c);let i=0,t;
  const play=()=>{clearInterval(t);if(!calm)t=setInterval(()=>go((i+1)%q.length),5200)};go(0);play()});
 /* contact form validation */
 const f=$('#lead');if(f){f.addEventListener('submit',e=>{e.preventDefault();let ok=true;
- const rules={name:v=>v.trim().length>1||'Enter your name.',phone:v=>/^[6-9]\d{9}$/.test(v.replace(/[\s+-]|^91/g,''))||'Enter a valid 10-digit mobile number.',goal:v=>!!v||'Pick a goal.'};
+ const rules={name:v=>v.trim().length>1||'Enter your name.',phone:v=>{let d=v.replace(/\D/g,'');if(d.length>10)d=d.replace(/^(91|0+)/,'');return /^[6-9]\d{9}$/.test(d)||'Enter a valid 10-digit mobile number.'},goal:v=>!!v||'Pick a goal.'};
  Object.keys(rules).forEach(k=>{const i=f.elements[k],r=rules[k](i.value),m=i.parentElement.querySelector('.err');m.textContent=r===true?'':r;i.classList.toggle('bad',r!==true);if(r!==true)ok=false});
- if(ok)f.parentElement.classList.add('sent')})}
+ if(ok){const g=k=>f.elements[k].value.trim();const t=`Hi MuscleUp Gym, I want to join.\nName: ${g('name')}\nPhone: ${g('phone')}\nGoal: ${g('goal')}\nPreferred time: ${g('time')}\nMessage: ${g('msg')}`;f.parentElement.classList.add('sent');open('https://wa.me/919879859811?text='+encodeURIComponent(t),'_blank','noopener')}})}
 })();
